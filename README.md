@@ -5,3 +5,4 @@ This server accepts wss connections, reads packets and echos them back to the se
 
 Align hostnames, keys, certs, ports.
 
+See also: certs.bash
