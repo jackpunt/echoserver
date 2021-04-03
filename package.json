@@ -1,0 +1,14 @@
+{
+   "name": "echoserver",
+   "version": "1.0.0",
+   "description": "websocket server that echos each message frame: node index.js",
+   "main": "echoserver.js",
+   "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+   },
+   "author": "Jeff Peck <jpeckj@gmail.com> (http://thegraid.com)",
+   "license": "ISC",
+   "dependencies": {
+      "ws": "^3.3.3"
+   }
+}
