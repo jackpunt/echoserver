@@ -1,13 +1,25 @@
 {
-   "name": "echoserver",
+  "name": "@jackpunt/echoserver",
    "version": "1.0.0",
-   "description": "websocket server that echos each message frame: node index.js",
+   "description": "Implement secure websocket (wss://) server that echos each message frame",
    "main": "echoserver.js",
    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node echoserver.js"
    },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jackpunt/echoserver.git"
+  },
+  "keywords": [
+    "wss",
+    "node"
+  ],
    "author": "Jeff Peck <jpeckj@gmail.com> (http://thegraid.com)",
    "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jackpunt/echoserver/issues"
+  },
+  "homepage": "https://github.com/jackpunt/echoserver#readme",
    "dependencies": {
       "ws": "^3.3.3"
    }
