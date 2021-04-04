@@ -2,8 +2,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as http from "http";
 import * as dns from "dns";
-import WebSocket from "./node_modules/ws/lib/websocket";
-import { WebSocketServer, WSOpts } from "ws";
+import { WSOpts } from "ws";
 
 
 /**
@@ -86,8 +85,8 @@ class GameServer {
 			binaryType: 'arraybuffer',
 			perMessageDeflate: false
 		}
-
-		const wss = new WebSocket.Server(opts); // or WebSocket.Server() if we get that to work
+		const WebSocketServer = require('ws').Server; // or WebSocket.Server() if we get that to work
+		const wss = new WebSocketServer(opts);
 
 		console.log('d: %s starting: wss=%s', new Date(), wss);
 		// 'req' has the http upgrade request: req.connection.remoteAddress
@@ -120,3 +119,4 @@ class GameServer {
 		});
 	}
 }
+new GameServer("game7", null)
