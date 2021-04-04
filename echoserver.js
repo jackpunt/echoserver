@@ -28,7 +28,7 @@ const util = require('util');
 const dns = require('dns');
 const dnslookup = util.promisify(dns.lookup);
 
-async function dnslookup1(name) {
+async function dnslookup1(hostname) {
 	const rv = await dnslookup(hostname, 4);
 	console.log('rv=%s', rv);
 	console.log('rv.address=%s', rv.address);
