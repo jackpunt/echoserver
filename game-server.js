@@ -6,11 +6,19 @@ var dns = require("dns");
  * listening and responding on wss://NAME.thegraid.com:PORT/
  */
 var GameServer = (function () {
-    function GameServer(basename, app) {
+    function GameServer(basename, domain, port, keydir) {
         var _this = this;
+        if (basename === void 0) { basename = "game7"; }
+        if (domain === void 0) { domain = ".thegraid.com"; }
+        if (port === void 0) { port = 8443; }
+        if (keydir === void 0) { keydir = "/Users/jpeck/keys/"; }
+        this.basename = "localhost";
+        this.domain = ".local";
+        this.hostname = this.basename + this.domain;
         this.port = 8443;
         this.keydir = "/Users/jpeck/keys/";
-        this.app = null; // an express app [if you have one, to handle requests]
+        this.keypath = this.keydir + this.basename + '.key.pem';
+        this.certpath = this.keydir + this.basename + '.cert.pem';
         this.dumpobj = function (name, obj) {
             console.log("dumping obj=" + name);
             if (obj) {
@@ -19,21 +27,12 @@ var GameServer = (function () {
                 }
             }
         };
+        this.baseOpts = {
+            binaryType: 'arrayBuffer',
+            perMessageDeflate: false
+        };
         this.run_server = function (host, port) {
-            console.log('try listen on %s:%d', host, port);
-            //pass in your express app and credentials to create an https server
-            var httpsServer = https.createServer(_this.credentials, _this.app).listen(port, host);
-            console.log('listening on %s:%d', host, port);
-            //const WebSocketServer = ws.Server;
-            var opts = {
-                //port: 8088,
-                server: httpsServer,
-                binaryType: 'arraybuffer',
-                perMessageDeflate: false
-            };
-            var WebSocketServer = require('ws').Server; // or WebSocket.Server() if we get that to work
-            var wss = new WebSocketServer(opts);
-            console.log('d: %s starting: wss=%s', new Date(), wss);
+            var wss = _this.make_wss_server(host, port);
             // 'req' has the http upgrade request: req.connection.remoteAddress
             wss.on('connection', function connection(ws, req) {
                 ws.on('open', function open() {
@@ -59,43 +58,46 @@ var GameServer = (function () {
                 });
             });
         };
-        this.port = 8443;
-        this.keydir = "/Users/jpeck/keys/";
+        this.port = port;
+        this.keydir = keydir;
         this.keypath = this.keydir + basename + '.key.pem';
         this.certpath = this.keydir + basename + '.cert.pem';
-        this.hostname = basename + '.thegraid.com';
-        // cp ~/tomcat.key.pem ./sslcert/key.pem
-        // cp ~/tomcat.cert.pem ./sslcert/cert.pem
-        this.privateKey = fs.readFileSync(this.keypath, 'utf8');
-        this.certificate = fs.readFileSync(this.certpath, 'utf8');
-        this.credentials = { key: this.privateKey, cert: this.certificate };
-        // function lookup(hostname: string, family: number, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
-        // function lookup(hostname: string, options: LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
-        // function lookup(hostname: string, options: LookupAllOptions, callback: (err: NodeJS.ErrnoException | null, addresses: LookupAddress[]) => void): void;
-        // function lookup(hostname: string, options: LookupOptions, callback: (err: NodeJS.ErrnoException | null, address: string | LookupAddress[], family: number) => void): void;
-        // function lookup(hostname: string, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
-        //const express = require('express');
-        //var app = express();
-        //... bunch of other express stuff here ...
-        // lookup(this.hostname, () => { })
-        dns.lookup(this.hostname, function (err, addr, fam) {
+        this.hostname = basename + domain;
+        this.credentials = this.getCredentials(this.keypath, this.certpath);
+    }
+    GameServer.prototype.run = function () {
+        this.dnsLookup(this.hostname, this.run_server);
+    };
+    GameServer.prototype.dnsLookup = function (hostname, callback) {
+        var _this = this;
+        dns.lookup(hostname, function (err, addr, fam) {
             console.log('rv=', { err: err, addr: addr, fam: fam });
             console.log('rv.address=%s', addr);
             if (err)
                 console.log("Error", { code: err.code, error: err });
             else
-                _this.run_server(addr, _this.port);
+                callback(addr, _this.port);
         });
-        // async function dnslookup1 (name: string) {
-        // 	const rv = await promisify(lookup)(name, 4);
-        // 	console.log('rv=%s', rv);
-        // 	console.log('rv.address=%s', rv.address);
-        // 	return rv.address;
-        // };
-        // dnslookup1(this.hostname)
-        // 	.then((addr) => this.run_server(addr, this.port))
-        // 	.catch((error) => console.log(error));
-    }
+    };
+    GameServer.prototype.getCredentials = function (keypath, certpath) {
+        var privateKey = fs.readFileSync(this.keypath, 'utf8');
+        var certificate = fs.readFileSync(this.certpath, 'utf8');
+        return { key: privateKey, cert: certificate };
+    };
+    GameServer.prototype.wssUpgrade = function (httpsServer, opts) {
+        if (opts === void 0) { opts = this.baseOpts; }
+        opts.server = httpsServer;
+        return new (require('ws').Server)(opts);
+    };
+    GameServer.prototype.make_wss_server = function (host, port) {
+        console.log('try listen on %s:%d', host, port);
+        //pass in your express app and credentials to create an https server
+        var httpsServer = https.createServer(this.credentials, undefined).listen(port, host);
+        console.log('listening on %s:%d', host, port);
+        var wss = this.wssUpgrade(httpsServer);
+        console.log('d: %s starting: wss=%s', new Date(), wss);
+        return wss;
+    };
     return GameServer;
 })();
-new GameServer("game7", null);
+new GameServer("game7").run();

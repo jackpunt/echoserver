@@ -2,64 +2,58 @@ import * as fs from "fs";
 import * as https from "https";
 import * as http from "http";
 import * as dns from "dns";
-import { WSOpts } from "ws";
+import * as ws from "ws"
 
+type WSOpts = {
+	host?: string, port?: number, server?: http.Server, binaryType?: string,
+	verifyClient?: () => boolean, handleProtocols?: () => void,
+	path?: string, noServer?: boolean, clientTracking?: boolean,
+	perMessageDeflate?: boolean | any, maxPayload?: number
+}
 
+// a subset of https.ServerOptions
+type Credentials = https.ServerOptions // {key: string, cert: string}
 /**
  * a Secure WebSocket Server (wss://)
  * listening and responding on wss://NAME.thegraid.com:PORT/
  */
 class GameServer {
+	basename: string = "localhost"
+	domain: string = ".local"
+	hostname: string = this.basename + this.domain
 	port: number = 8443;
 	keydir = "/Users/jpeck/keys/";
-	keypath: string
-	certpath: string
-	hostname: string
-	privateKey: string
-	certificate: string
-	credentials: { key: string, cert: string }
-	app: http.RequestListener = null; // an express app [if you have one, to handle requests]
-
-	constructor(basename: string, app: http.RequestListener) { // basename= 'graid7'
-		this.port = 8443;
-		this.keydir = "/Users/jpeck/keys/";
-		this.keypath = this.keydir + basename + '.key.pem';
-		this.certpath = this.keydir + basename + '.cert.pem';
-		this.hostname = basename + '.thegraid.com';
-
-		// cp ~/tomcat.key.pem ./sslcert/key.pem
-		// cp ~/tomcat.cert.pem ./sslcert/cert.pem
-		this.privateKey = fs.readFileSync(this.keypath, 'utf8');
-		this.certificate = fs.readFileSync(this.certpath, 'utf8');
-		this.credentials = { key: this.privateKey, cert: this.certificate };
-
-		// function lookup(hostname: string, family: number, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
-		// function lookup(hostname: string, options: LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
-		// function lookup(hostname: string, options: LookupAllOptions, callback: (err: NodeJS.ErrnoException | null, addresses: LookupAddress[]) => void): void;
-		// function lookup(hostname: string, options: LookupOptions, callback: (err: NodeJS.ErrnoException | null, address: string | LookupAddress[], family: number) => void): void;
-		// function lookup(hostname: string, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
-
-		//const express = require('express');
-		//var app = express();
-		//... bunch of other express stuff here ...
-
-		// lookup(this.hostname, () => { })
-		dns.lookup(this.hostname, (err, addr, fam) => {
+	keypath: string = this.keydir + this.basename + '.key.pem'
+	certpath: string = this.keydir + this.basename + '.cert.pem'
+	credentials: Credentials
+	run() {
+		this.dnsLookup(this.hostname, this.run_server)
+	}
+	dnsLookup(hostname: string, callback:(addr: string, fam: number) => void) {
+		dns.lookup(hostname, (err, addr, fam) => {
 			console.log('rv=', {err: err, addr: addr, fam: fam});
 			console.log('rv.address=%s', addr);
 			if (err) console.log("Error", {code: err.code, error: err})
-			else this.run_server(addr, this.port)
+			else callback(addr, this.port)
 		})
+	}
+	getCredentials(keypath: string, certpath: string): Credentials  {
+		let privateKey = fs.readFileSync(this.keypath, 'utf8');
+		let certificate = fs.readFileSync(this.certpath, 'utf8');
+		return { key: privateKey, cert: certificate };
+	}
 
-		// async function dnslookup1 (name: string) {
-		// 	const rv = await promisify(lookup)(name, 4);
-		// 	console.log('rv=%s', rv);
-		// 	console.log('rv.address=%s', rv.address);
-		// 	return rv.address;
-		// };
-		// dnslookup1(this.hostname)
-		// 	.then((addr) => this.run_server(addr, this.port))
-		// 	.catch((error) => console.log(error));
+	constructor(basename: string = "game7",
+		domain: string = ".thegraid.com",
+		port: number = 8443,
+		keydir: string = "/Users/jpeck/keys/") {
+
+		this.port = port;
+		this.keydir = keydir;
+		this.keypath = this.keydir + basename + '.key.pem';
+		this.certpath = this.keydir + basename + '.cert.pem';
+		this.hostname = basename + domain;
+		this.credentials = this.getCredentials(this.keypath, this.certpath)
 	}
 
 	dumpobj = (name, obj) => {
@@ -70,25 +64,26 @@ class GameServer {
 			}
 		}
 	};
-
-	run_server = (host: string, port: number) => {
+	baseOpts: ws.WSOpts = {
+		binaryType: 'arrayBuffer',
+		perMessageDeflate: false
+	}
+	wssUpgrade(httpsServer: https.Server, opts: ws.WSOpts = this.baseOpts): ws.WebSocket.Server {
+		opts.server = httpsServer;
+		return new (require('ws').Server)(opts);
+	}
+	make_wss_server(host: string, port: number): ws.WebSocket.Server {
 		console.log('try listen on %s:%d', host, port);
 		//pass in your express app and credentials to create an https server
-		let httpsServer = https.createServer(this.credentials, this.app).listen(port, host);
+		let httpsServer = https.createServer(this.credentials, undefined).listen(port, host);
 		console.log('listening on %s:%d', host, port);
-
-		//const WebSocketServer = ws.Server;
-
-		const opts: WSOpts = {
-			//port: 8088,
-			server: httpsServer,
-			binaryType: 'arraybuffer',
-			perMessageDeflate: false
-		}
-		const WebSocketServer = require('ws').Server; // or WebSocket.Server() if we get that to work
-		const wss = new WebSocketServer(opts);
-
+		const wss = this.wssUpgrade(httpsServer)
 		console.log('d: %s starting: wss=%s', new Date(), wss);
+		return wss;
+	}
+
+	run_server = (host: string, port: number) => {
+		let wss = this.make_wss_server(host, port)
 		// 'req' has the http upgrade request: req.connection.remoteAddress
 		wss.on('connection', function connection(ws, req) {
 			ws.on('open', function open() {
@@ -119,4 +114,4 @@ class GameServer {
 		});
 	}
 }
-new GameServer("game7", null)
+new GameServer("game7").run()
