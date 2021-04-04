@@ -4,8 +4,17 @@ import * as http from "http";
 import * as dns from "dns";
 import * as ws from "ws"
 
-type WSOpts = {
-	host?: string, port?: number, server?: http.Server, binaryType?: string,
+// Access to ws.WebSocket class! https://github.com/websockets/ws/issues/1517 
+declare module 'ws' {
+  export interface WebSocket extends ws { }
+}
+
+// BINARY_TYPES: ['nodebuffer', 'arraybuffer', 'fragments'],
+type BINARY_TYPES = 'nodebuffer' | 'arraybuffer' | 'fragments';
+
+interface WSOpts extends ws.ServerOptions {
+	host?: string, port?: number, server?: http.Server, 
+	binaryType?: BINARY_TYPES,
 	verifyClient?: () => boolean, handleProtocols?: () => void,
 	path?: string, noServer?: boolean, clientTracking?: boolean,
 	perMessageDeflate?: boolean | any, maxPayload?: number
@@ -29,15 +38,15 @@ class GameServer {
 	run() {
 		this.dnsLookup(this.hostname, this.run_server)
 	}
-	dnsLookup(hostname: string, callback:(addr: string, fam: number) => void) {
+	dnsLookup(hostname: string, callback: (addr: string, fam: number) => void) {
 		dns.lookup(hostname, (err, addr, fam) => {
-			console.log('rv=', {err: err, addr: addr, fam: fam});
+			console.log('rv=', { err: err, addr: addr, fam: fam });
 			console.log('rv.address=%s', addr);
-			if (err) console.log("Error", {code: err.code, error: err})
+			if (err) console.log("Error", { code: err.code, error: err })
 			else callback(addr, this.port)
 		})
 	}
-	getCredentials(keypath: string, certpath: string): Credentials  {
+	getCredentials(keypath: string, certpath: string): Credentials {
 		let privateKey = fs.readFileSync(this.keypath, 'utf8');
 		let certificate = fs.readFileSync(this.certpath, 'utf8');
 		return { key: privateKey, cert: certificate };
@@ -64,15 +73,15 @@ class GameServer {
 			}
 		}
 	};
-	baseOpts: ws.WSOpts = {
-		binaryType: 'arrayBuffer',
+	baseOpts: WSOpts = {
+		binaryType: 'arraybuffer',
 		perMessageDeflate: false
 	}
-	wssUpgrade(httpsServer: https.Server, opts: ws.WSOpts = this.baseOpts): ws.WebSocket.Server {
+	wssUpgrade(httpsServer: https.Server, opts: WSOpts = this.baseOpts): ws.Server {
 		opts.server = httpsServer;
-		return new (require('ws').Server)(opts);
+		return new ws.Server(opts);
 	}
-	make_wss_server(host: string, port: number): ws.WebSocket.Server {
+	make_wss_server(host: string, port: number): ws.Server {
 		console.log('try listen on %s:%d', host, port);
 		//pass in your express app and credentials to create an https server
 		let httpsServer = https.createServer(this.credentials, undefined).listen(port, host);
@@ -83,9 +92,10 @@ class GameServer {
 	}
 
 	run_server = (host: string, port: number) => {
+		let remote_addr: string;
 		let wss = this.make_wss_server(host, port)
-		// 'req' has the http upgrade request: req.connection.remoteAddress
-		wss.on('connection', function connection(ws, req) {
+		let connection = (ws: ws.WebSocket, req: http.IncomingMessage) => {
+			remote_addr = req.socket.remoteAddress
 			ws.on('open', function open() {
 				console.log('%s open', new Date().toTimeString());
 			});
@@ -111,7 +121,8 @@ class GameServer {
 				console.log('%s disconnected', new Date());
 			});
 
-		});
+		}
+		wss.on('connection', connection);
 	}
 }
 new GameServer("game7").run()

@@ -1,6 +1,8 @@
 var fs = require("fs");
 var https = require("https");
 var dns = require("dns");
+var ws = require("ws");
+'nodebuffer' | 'arraybuffer' | 'fragments';
 /**
  * a Secure WebSocket Server (wss://)
  * listening and responding on wss://NAME.thegraid.com:PORT/
@@ -28,13 +30,14 @@ var GameServer = (function () {
             }
         };
         this.baseOpts = {
-            binaryType: 'arrayBuffer',
+            binaryType: 'arraybuffer',
             perMessageDeflate: false
         };
         this.run_server = function (host, port) {
+            var remote_addr;
             var wss = _this.make_wss_server(host, port);
-            // 'req' has the http upgrade request: req.connection.remoteAddress
-            wss.on('connection', function connection(ws, req) {
+            var connection = function (ws, req) {
+                remote_addr = req.socket.remoteAddress;
                 ws.on('open', function open() {
                     console.log('%s open', new Date().toTimeString());
                 });
@@ -56,7 +59,8 @@ var GameServer = (function () {
                 ws.on('close', function close() {
                     console.log('%s disconnected', new Date());
                 });
-            });
+            };
+            wss.on('connection', connection);
         };
         this.port = port;
         this.keydir = keydir;
@@ -87,7 +91,7 @@ var GameServer = (function () {
     GameServer.prototype.wssUpgrade = function (httpsServer, opts) {
         if (opts === void 0) { opts = this.baseOpts; }
         opts.server = httpsServer;
-        return new (require('ws').Server)(opts);
+        return new ws.Server(opts);
     };
     GameServer.prototype.make_wss_server = function (host, port) {
         console.log('try listen on %s:%d', host, port);
