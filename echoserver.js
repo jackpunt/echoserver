@@ -53,9 +53,8 @@ function run_server(host, port) {
 	const WebSocketServer = require('ws').Server;
 
 	const wss = new WebSocketServer({
-		//port: 8088,
 		server: httpsServer,
-		binaryType: 'arraybuffer',
+		//binaryType: 'arraybuffer',
 		perMessageDeflate: false
 	});
 

@@ -13,11 +13,16 @@ declare module 'ws' {
 type BINARY_TYPES = 'nodebuffer' | 'arraybuffer' | 'fragments';
 
 interface WSOpts extends ws.ServerOptions {
-	host?: string, port?: number, server?: http.Server, 
+	host?: string, port?: number, backlog?: number,
+	server?: http.Server | https.Server, 
+	verifyClient?: ws.VerifyClientCallbackAsync | ws.VerifyClientCallbackSync, 
+	handleProtocols?: () => void,
+	path?: string, 
+	noServer?: boolean, 
+	perMessageDeflate?: boolean | ws.PerMessageDeflateOptions, 
+	clientTracking?: boolean,
+	maxPayload?: number
 	binaryType?: BINARY_TYPES,
-	verifyClient?: () => boolean, handleProtocols?: () => void,
-	path?: string, noServer?: boolean, clientTracking?: boolean,
-	perMessageDeflate?: boolean | any, maxPayload?: number
 }
 
 // a subset of https.ServerOptions
