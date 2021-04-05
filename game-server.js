@@ -38,10 +38,13 @@ var GameServer = (function () {
             var wss = _this.make_wss_server(host, port);
             var connection = function (ws, req) {
                 remote_addr = req.socket.remoteAddress;
-                ws.on('open', function open() {
+                var err = function (e) {
+                    console.log('%s error: %s', new Date(), e.message);
+                };
+                var open = function () {
                     console.log('%s open', new Date().toTimeString());
-                });
-                ws.on('message', function incoming(message, flags) {
+                };
+                var incoming = function (message, flags) {
                     // message appears to be a 'Buffer'
                     console.log("%s received: message.length= %s, flags= %s, flags.binary=%s", new Date().toTimeString(), message.length, flags, (flags && flags.binary));
                     ws.send(message, function ack(error) {
@@ -52,13 +55,14 @@ var GameServer = (function () {
                             console.log('%s error: %s', new Date().toTimeString(), error);
                         }
                     });
-                });
-                ws.on('error', function err(e) {
-                    console.log('%s error: %s', new Date(), e.message);
-                });
-                ws.on('close', function close() {
+                };
+                var close = function () {
                     console.log('%s disconnected', new Date());
-                });
+                };
+                ws.on('open', open);
+                ws.on('message', incoming);
+                ws.on('error', err);
+                ws.on('close', close);
             };
             wss.on('connection', connection);
         };

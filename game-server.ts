@@ -101,11 +101,14 @@ class GameServer {
 		let wss = this.make_wss_server(host, port)
 		let connection = (ws: ws.WebSocket, req: http.IncomingMessage) => {
 			remote_addr = req.socket.remoteAddress
-			ws.on('open', function open() {
+			
+			let err = (e: { message: any; }) => {
+				console.log('%s error: %s', new Date(), e.message);
+			}
+			let open = () =>{
 				console.log('%s open', new Date().toTimeString());
-			});
-
-			ws.on('message', function incoming(message, flags) {
+			}
+			let incoming = (message, flags) => {
 				// message appears to be a 'Buffer'
 				console.log("%s received: message.length= %s, flags= %s, flags.binary=%s",
 					new Date().toTimeString(), message.length, flags, (flags && flags.binary));
@@ -116,15 +119,17 @@ class GameServer {
 						console.log('%s error: %s', new Date().toTimeString(), error);
 					}
 				});
-			});
-
-			ws.on('error', function err(e: { message: any; }) {
-				console.log('%s error: %s', new Date(), e.message);
-			});
-
-			ws.on('close', function close() {
+			}
+			let close = () => {
 				console.log('%s disconnected', new Date());
-			});
+			}
+			ws.on('open', open);
+
+			ws.on('message', incoming);
+
+			ws.on('error', err);
+
+			ws.on('close', close);
 
 		}
 		wss.on('connection', connection);
