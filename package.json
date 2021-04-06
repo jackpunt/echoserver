@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Implement secure websocket (wss://) server that echos each message frame",
   "main": "./dist/out-tsc/echoserver.js",
+  "files": ["dist/out-tsc", "certs.bash"],
   "scripts": {
     "build": "tsc",
     "test": "node dist/out-tsc/echoserver.js",
