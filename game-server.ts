@@ -12,6 +12,14 @@ declare module 'ws' {
 // BINARY_TYPES: ['nodebuffer', 'arraybuffer', 'fragments'],
 type BINARY_TYPES = 'nodebuffer' | 'arraybuffer' | 'fragments';
 
+interface  WSSOpts { domain: string, port: number, keydir: string, }
+
+const theGraid: WSSOpts = {
+	domain: ".thegraid.com",
+	port: 8443,
+	keydir: "/Users/jpeck/keys/"
+}
+
 interface WSOpts extends ws.ServerOptions {
 	host?: string, port?: number, backlog?: number,
 	server?: http.Server | https.Server, 
@@ -23,6 +31,45 @@ interface WSOpts extends ws.ServerOptions {
 	clientTracking?: boolean,
 	maxPayload?: number
 	binaryType?: BINARY_TYPES,
+}
+/** log each method with timeStamp. */
+class BasicServer {
+	ws: ws.WebSocket; // set by connection
+
+	constructor(ws: ws.WebSocket) {
+		this.ws = ws
+	}
+
+	err(e: Error) {
+		console.log('%s error: %s', new Date(), e.message);
+	}
+	open() {
+		console.log('%s open', new Date().toTimeString());
+	}
+	incoming(message: Buffer, flags) {
+		// message appears to be a 'Buffer'
+		console.log("%s RECEIVED:", new Date().toTimeString(), {message, flags})
+		console.log("%s received: message.length= %s, flags= %s, flags.binary=%s",
+			new Date().toTimeString(), message.length, flags, (flags && flags.binary));
+	}
+	close() {
+		console.log('%s disconnected', new Date());
+	}
+}
+/** handle incoming() but sending back to this.ws */
+class EchoServer extends BasicServer {
+	// message appears to be a 'Buffer'
+	incoming(message: Buffer, flags) {
+		super.incoming(message, flags)
+		let ack = (error: Error) => {
+			if (!error) {
+				console.log('%s sent: %s', new Date().toTimeString(), "success");
+			} else {
+				console.log('%s error: %s', new Date().toTimeString(), error);
+			}
+		}
+		this.ws.send(message,  ack);
+	}
 }
 
 // a subset of https.ServerOptions
@@ -40,6 +87,9 @@ class GameServer {
 	keypath: string = this.keydir + this.basename + '.key.pem'
 	certpath: string = this.keydir + this.basename + '.cert.pem'
 	credentials: Credentials
+	cnxType: typeof BasicServer;
+	handler: BasicServer;
+	
 	run() {
 		this.dnsLookup(this.hostname, this.run_server)
 	}
@@ -57,17 +107,15 @@ class GameServer {
 		return { key: privateKey, cert: certificate };
 	}
 
-	constructor(basename: string = "game7",
-		domain: string = ".thegraid.com",
-		port: number = 8443,
-		keydir: string = "/Users/jpeck/keys/") {
-
+	constructor(basename: string = "game7", wssOpts: WSSOpts, cnxType: typeof BasicServer) {
+		let { domain, port, keydir } = wssOpts
 		this.port = port;
 		this.keydir = keydir;
 		this.keypath = this.keydir + basename + '.key.pem';
 		this.certpath = this.keydir + basename + '.cert.pem';
 		this.hostname = basename + domain;
 		this.credentials = this.getCredentials(this.keypath, this.certpath)
+		this.cnxType = cnxType
 	}
 
 	dumpobj = (name, obj) => {
@@ -101,7 +149,8 @@ class GameServer {
 		let wss = this.make_wss_server(host, port)
 		let connection = (ws: ws.WebSocket, req: http.IncomingMessage) => {
 			remote_addr = req.socket.remoteAddress
-			
+			this.handler = new this.cnxType(ws)
+
 			let err = (e: { message: any; }) => {
 				console.log('%s error: %s', new Date(), e.message);
 			}
@@ -123,16 +172,17 @@ class GameServer {
 			let close = () => {
 				console.log('%s disconnected', new Date());
 			}
-			ws.on('open', open);
+			ws.on('open', this.handler.open);
 
-			ws.on('message', incoming);
+			ws.on('message', this.handler.incoming);
 
-			ws.on('error', err);
+			ws.on('error', this.handler.err);
 
-			ws.on('close', close);
+			ws.on('close', this.handler.close);
 
 		}
 		wss.on('connection', connection);
 	}
 }
-new GameServer("game7").run()
+console.log("game-server! ", new Date().toTimeString())
+new GameServer("game7", theGraid, EchoServer).run()
