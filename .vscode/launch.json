@@ -7,11 +7,20 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "Launch game-server.js",
+      "name": "node dist/game-server.js",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/game-server.ts",
+      "program": "${workspaceFolder}/dist/out-tsc/game-server.js",
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "node game-server.js",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/game-server.js",
     },
     {
       "type": "pwa-node",

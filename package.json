@@ -4,6 +4,7 @@
   "description": "Implement secure websocket (wss://) server that echos each message frame",
   "main": "echoserver.js",
   "scripts": {
+    "build": "tsc",
     "test": "node echoserver.js"
   },
   "repository": {
@@ -23,7 +24,8 @@
   "dependencies": {
     "@types/ws": "^7.4.1",
     "tslib": "^2.1.0",
-    "ws": "^7.4.4"
+    "ws": "^7.4.4",
+    "wspbserver": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "^14.14.37",
