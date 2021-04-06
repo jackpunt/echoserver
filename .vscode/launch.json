@@ -7,7 +7,7 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "node dist/game-server.js",
+      "name": "node game-server.js",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -16,11 +16,11 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "node game-server.js",
+      "name": "node echoserver.js",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/game-server.js",
+      "program": "${workspaceFolder}/dist/out-tsc/echoserver.js",
     },
     {
       "type": "pwa-node",
@@ -38,7 +38,7 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "node echoserver.js",
+      "name": "node ./echoserver.js",
       "skipFiles": [
         "<node_internals>/**"
       ],
