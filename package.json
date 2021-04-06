@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "node dist/out-tsc/echoserver.js",
-    "echoserver": "node dist/out-tsc/echoserver.js"
+    "echoserver": "node echoserver.js"
   },
   "repository": {
     "type": "git",
