@@ -1,6 +1,6 @@
 {
   "name": "echoserver",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Implement secure websocket (wss://) server that echos each message frame",
   "main": "./dist/out-tsc/echoserver.js",
   "files": [
