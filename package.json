@@ -1,5 +1,5 @@
 {
-  "name": "@jackpunt/echoserver",
+  "name": "echoserver",
   "version": "1.1.0",
   "description": "Implement secure websocket (wss://) server that echos each message frame",
   "main": "./dist/out-tsc/echoserver.js",
