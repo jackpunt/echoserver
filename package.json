@@ -2,16 +2,18 @@
   "name": "echoserver",
   "version": "1.2.0",
   "description": "Implement secure websocket (wss://) server that echos each message frame",
-  "main": "./dist/out-tsc/echoserver.js",
+  "main": "./dist/echoserver.js",
   "files": [
-    "dist/out-tsc",
+    "dist",
     "certs.bash"
   ],
   "scripts": {
-    "clean": "rm -f dist/out-tsc/*",
+    "clean": "rm -f dist/*",
     "build": "tsc",
-    "test": "node dist/out-tsc/echoserver.js",
-    "echoserver": "node echoserver.js"
+    "redo": "npm run clean; npm run build; npm run test",
+    "test": "node dist/echoserver.js",
+    "echo": "node dist/echoserver.js",
+    "game": "node dist/game-server.js"
   },
   "repository": {
     "type": "git",

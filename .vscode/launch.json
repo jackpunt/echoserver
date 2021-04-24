@@ -11,7 +11,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/dist/out-tsc/game-server.js",
+      "program": "${workspaceFolder}/dist/game-server.js",
     },
     {
       "type": "pwa-node",
@@ -20,7 +20,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/dist/out-tsc/echoserver.js",
+      "program": "${workspaceFolder}/dist/echoserver.js",
     },
     {
       "type": "pwa-node",
