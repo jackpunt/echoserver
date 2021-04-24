@@ -1,6 +1,6 @@
 import { WssListener, WSSOpts } from "wspbserver";
 import { BaseDriver, DataBuf, pbMessage, stime } from 'wspbclient'
-import { EchoDriver } from "./EchoDriver";
+//import { EchoDriver } from "./EchoDriver";
 
 // all the import/export: https://blog.atomist.com/typescript-imports/
 // https://dzone.com/articles/import-statements-in-typescript-which-syntax-to-us
@@ -36,7 +36,7 @@ const echoserver:  WSSOpts = {
 }
 
 console.log(stime(), "echoserver! ")
-let cnxlp = new WssListener("game7", echoserver, EchoDriver).startListening()
+let cnxlp = new WssListener("game7", echoserver, xEchoDriver).startListening()
 let fil = (cnxl: WssListener) => {
 	console.log("%s listening %s:%d", stime(), cnxl.hostname, cnxl.port)
 }
