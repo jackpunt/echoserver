@@ -1,6 +1,6 @@
 {
   "name": "@thegraid/echoserver",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Implement secure websocket (wss://) server that echos each message frame",
   "main": "./dist/echoserver.js",
   "files": [
