@@ -1,4 +1,4 @@
-import { BaseDriver, DataBuf, pbMessage, stime } from 'wspbclient'
+import { BaseDriver, DataBuf, pbMessage, stime } from '@thegraid/wspbclient'
 
 /** A BaseDriver that handles incoming(buf) by sending it back to this.ws */
 export class EchoDriver<T extends pbMessage> extends BaseDriver<T, T> {

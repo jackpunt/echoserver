@@ -1,5 +1,5 @@
-import { WssListener, WSSOpts } from "wspbserver";
-import { BaseDriver, DataBuf, pbMessage, stime } from 'wspbclient'
+import { WssListener, WSSOpts } from "@thegraid/wspbserver";
+import { BaseDriver, DataBuf, pbMessage, stime } from '@thegraid/wspbclient'
 //import { EchoDriver } from "./EchoDriver";
 
 // all the import/export: https://blog.atomist.com/typescript-imports/

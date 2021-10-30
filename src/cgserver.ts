@@ -1,5 +1,4 @@
-import { WssListener, WSSOpts } from 'wspbserver';
-import { CgServerDriver } from 'wspbserver'
+import { WssListener, WSSOpts, CgServerDriver } from '@thegraid/wspbserver';
 
 const cgserver: WSSOpts = {
 	domain: ".thegraid.com",
