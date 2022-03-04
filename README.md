@@ -7,4 +7,4 @@ Align hostnames, keys, certs, ports.
 
 See also: certs.bash
 
-published in npm registry: @thegraid/ezpromise
+published in npm registry: @thegraid/echoserver
