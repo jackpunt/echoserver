@@ -6,17 +6,18 @@ import type { pbMessage } from "@thegraid/wspbclient";
 class GameServer<T extends pbMessage> extends EchoDriver<T> {
 
 }
-const gameserver:  WSSOpts = {
-	domain: ".thegraid.com",
-	port: 8445,
-	keydir: "/Users/jpeck/keys/"
+const gameserver: WSSOpts = {
+  domain: ".thegraid.com",
+  port: 8445,
+  keydir: "/Users/jpeck/keys/"
 }
+const host = process.argv[2] || "game7"
 
-console.log(stime(), "game-server! ")
+console.log(stime("game-server", "!"), host)
 
-let cnxlp = new WssListener("game7", gameserver, GameServer).startListening()
+let cnxlp = new WssListener(host, gameserver, GameServer).startListening()
 cnxlp.then((cnxl) => {
-	console.log("%s listening %s:%d", stime(), cnxl.hostname, cnxl.port)
+  console.log("%s listening %s:%d", stime(), cnxl.hostname, cnxl.port)
 }, (reason) => {
-	console.log(stime(), "reject:", reason)
+  console.log(stime(), "reject:", reason)
 })
