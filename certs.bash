@@ -1,5 +1,6 @@
 #! /bin/bash
-# source this file, or paste into .bash_aliases or whatever... (working since 2017)
+# source this file, or paste into .bash_aliases or whatever... 
+# (working since 2017 on MacOS; with keytools installs)
 #
 # Create and sign per-host certificates for hostnames in /etc/hosts
 # [using multiple ports on localhost]
@@ -14,6 +15,7 @@
 # 127.0.0.7     game7.thegraid.com
 # 127.0.0.1     rmi.thegraid.com
 # the common domain is set in: ROOT_DOMAIN (for which we make a root certificate)
+# ROOT_DOMAIN is set when: makekeys -r thegraid.com
 
 # from chrome://setting (advanced) "Manage Certificates" (unlock Keychain)
 # echo "double click and import to OSX 'system' keystore, trust for SSL"
@@ -60,6 +62,8 @@ function hostkeys() {
     local pw=${KEYPASS:-changeit}
     local myks="$(ls -d ~/keys)/keystore"
     local usemyks=" -keystore $myks -storepass $pw -keypass $pw "
+    # for Node.js, remove old NODE_EXTRA_CA_CERTS
+    if [[ ! -z "$NODE_EXTRA_CA_CERTS" ]] ; then rm -f $NODE_EXTRA_CA_CERTS ; fi
 
     for alias in $* ; do
       makekeys $alias
@@ -177,7 +181,8 @@ function makepem() {
             -deststorepass $pw -destkeypass $pw -srckeypass $pw -srcstorepass $pw
     openssl pkcs12 -in $ks12 -nokeys         -out ~/keys/$al.cert.pem -passin pass:$pw
     openssl pkcs12 -in $ks12 -nodes -nocerts -out ~/keys/$al.key.pem  -passin pass:$pw
-
+    # add to $NODE_EXTRA_CA_CERTS if that's being used
+    if [[ ! -z "$NODE_EXTRA_CA_CERTS" ]] ; then cat ~/keys/$al.cert.pem >> $NODE_EXTRA_CA_CERTS ; fi
 }
 function topcerts() {
     al=$1
