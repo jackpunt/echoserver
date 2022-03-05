@@ -62,23 +62,26 @@ function printkey() {
     keytool $usemyks -export -alias $a1 | keytool -printcert
 }
 
-# FIRST: make root cert: makekeys -r graidroot thegraid.com 
-#       (setting ENV vars for later reference)
-# THEN: for each hostname in /etc/hosts to be used for HTTPS/WSS:
-# hostkeys lobby1 lobby2 lobby3 game4 game5 game6 game7
+### FIRST: make root cert:
+### keys -r graidroot thegraid.com 
+### THEN: make host certs: for each hostname in /etc/hosts to be used for HTTPS/WSS:
+#
+# hostkeys domain name1 name2 name3
 #
 function hostkeys() {
-    local domain=${ROOT_DOMAIN:-thegraid.com}
+    local domain=$1; shift
     local pw=${KEYPASS:-changeit}
     local myks="$(ls -d ~/keys)/keystore"
     local usemyks=" -keystore $myks -storepass $pw -keypass $pw "
     # for Node.js, remove old NODE_EXTRA_CA_CERTS
     if [[ ! -z "$NODE_EXTRA_CA_CERTS" ]] ; then rm -f $NODE_EXTRA_CA_CERTS ; fi
 
-    for alias in $* ; do
-      makekeys $alias
+    makekeys -r "$1"   # make root certificate
+
+    for alias in "$@" ; do
+	makekeys $alias
     done
-      keytool $usemyks -list
+    keytool $usemyks -list
 }
 
 # 
