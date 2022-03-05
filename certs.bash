@@ -43,6 +43,11 @@
 
 # :gammaNg> ng serve --ssl --ssl-key ~/keys/$al.key.pem --ssl-cert ~/keys/$al.cert.pem
 
+## MacOS utility for DNS/hostname lookup
+function host2() {
+    dscacheutil -q host -a name $1
+}
+
 function printkey() {
     # $1 = alias name: game4
     local al=$1
