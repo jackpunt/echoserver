@@ -84,8 +84,9 @@ function hostkeys() {
 # 
 # makekeys -r $rootalias $rootdomain
 # makekeys -r graidroot thegraid.com
-# makekeys game4
-
+# OR
+# makekeys host1 host2 host3 ...
+#
 function makekeys() {
     local root=0
     if [ $1 == "-r" ] ; then
