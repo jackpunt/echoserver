@@ -43,6 +43,11 @@
 
 # :gammaNg> ng serve --ssl --ssl-key ~/keys/$al.key.pem --ssl-cert ~/keys/$al.cert.pem
 
+### the follow code is maintained in github: echoserver
+###
+### https://github.com/jackpunt/echoserver/blob/master/certs.bash
+###
+
 ## MacOS utility for DNS/hostname lookup
 function host2() {
     dscacheutil -q host -a name $1
