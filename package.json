@@ -14,7 +14,8 @@
     "build": "npm run clean; npm run tsc; npm run test",
     "test": "node dist/echoserver.js",
     "echo": "node dist/echoserver.js",
-    "game": "node dist/game-server.js"
+    "cgserver": "node dist/cgserver.js",
+    "game": "node dist/gameserver.js"
   },
   "repository": {
     "type": "git",
@@ -33,7 +34,7 @@
   "homepage": "https://github.com/jackpunt/echoserver#readme",
   "dependencies": {
     "@thegraid/wspbclient": "^1.4.0",
-    "@thegraid/wspbserver": "^1.5.0",
+    "@thegraid/wspbserver": "^1.5.10",
     "tslib": "^2.1.0",
     "ws": "^7.4.4"
   },
