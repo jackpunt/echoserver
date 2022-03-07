@@ -11,7 +11,7 @@
     "pub": "npm run build; npm version patch; npm publish --access public",
     "clean": "rm -f dist/*",
     "tsc": "tsc",
-    "build": "npm run clean; npm run tsc; npm run test",
+    "build": "npm run clean; npm run tsc",
     "test": "node dist/echoserver.js",
     "echo": "node dist/echoserver.js",
     "cgserver": "node dist/cgserver.js",
@@ -34,7 +34,7 @@
   "homepage": "https://github.com/jackpunt/echoserver#readme",
   "dependencies": {
     "@thegraid/wspbclient": "^1.4.0",
-    "@thegraid/wspbserver": "^1.5.10",
+    "@thegraid/wspbserver": "^1.5.11",
     "tslib": "^2.1.0",
     "ws": "^7.4.4"
   },

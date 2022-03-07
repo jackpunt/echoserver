@@ -7,11 +7,11 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "node game-server.js",
+      "name": "node gameserver.js",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/dist/game-server.js",
+      "program": "${workspaceFolder}/dist/gameserver.js",
     },
     {
       "type": "pwa-node",
@@ -25,12 +25,12 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "build game-server.ts",
+      "name": "build gameserver.ts",
       "skipFiles": [
         "<node_internals>/**"
       ],
       "preLaunchTask": "tsc: build - tsconfig.json",
-      "program": "${workspaceFolder}/game-server.ts",
+      "program": "${workspaceFolder}/gameserver.ts",
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]
