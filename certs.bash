@@ -12,7 +12,7 @@
 # 127.0.0.4     game4.thegraid.com
 # 127.0.0.5     game5.thegraid.com
 # 127.0.0.6     game6.thegraid.com
-# 127.0.0.7     game7.thegraid.com
+# 192.168.4.8	game7.thegraid.com
 # 127.0.0.1     rmi.thegraid.com
 # the common domain is set in: ROOT_DOMAIN (for which we make a root certificate)
 # ROOT_DOMAIN is set when: makekeys -r thegraid.com
@@ -43,40 +43,29 @@
 
 # :gammaNg> ng serve --ssl --ssl-key ~/keys/$al.key.pem --ssl-cert ~/keys/$al.cert.pem
 
-### the follow code is maintained in github: echoserver
+### the following code is maintained in github: @thegraid/echoserver
 ###
 ### https://github.com/jackpunt/echoserver/blob/master/certs.bash
 ###
 
-## MacOS utility for DNS/hostname lookup
+## MacOS utility for DNS/hostname lookup from /etc/hosts
 function host2() {
     dscacheutil -q host -a name $1
-}
-
-function printkey() {
-    # $1 = alias name: game4
-    local al=$1
-    local pw=${3:-changeit}
-    local myks="$(ls -d ~/keys)/keystore"
-    local usemyks=" -keystore $myks -storepass $pw -keypass $pw "
-    keytool $usemyks -export -alias $a1 | keytool -printcert
 }
 
 ### FIRST: make root cert:
 ### keys -r graidroot thegraid.com 
 ### THEN: make host certs: for each hostname in /etc/hosts to be used for HTTPS/WSS:
 #
-# hostkeys domain name1 name2 name3
+# hostkeys name1 name2 name3
 #
 function hostkeys() {
-    local domain=$1; shift
+    local domain=${ROOT_DOMAIN:-thegraid.com}
     local pw=${KEYPASS:-changeit}
     local myks="$(ls -d ~/keys)/keystore"
     local usemyks=" -keystore $myks -storepass $pw -keypass $pw "
     # for Node.js, remove old NODE_EXTRA_CA_CERTS
     if [[ ! -z "$NODE_EXTRA_CA_CERTS" ]] ; then rm -f $NODE_EXTRA_CA_CERTS ; fi
-
-    makekeys -r "$1"   # make root certificate
 
     for alias in "$@" ; do
 	makekeys $alias
@@ -84,27 +73,26 @@ function hostkeys() {
     keytool $usemyks -list
 }
 
-# 
 # makekeys -r $rootalias $rootdomain
 # makekeys -r graidroot thegraid.com
 # OR
-# makekeys host1 host2 host3 ...
+# makekeys hostname
 #
 function makekeys() {
     local root=0
     if [ $1 == "-r" ] ; then
-        root=1 ; shift
-        if [ $1 == "-u" ] ; then # just set ENV and reuse the current root cert
-            # note that root cert will expire in 90 days, so pro'ly need to recreate
-            shift
-            export ROOT_ALIAS=${1:-graidroot}
-            export ROOT_DOMAIN=${2:-thegraid.com}
-            echo "Using ROOT_ALIAS=$ROOT_ALIAS for ROOT_DOMAIN=$ROOT_DOMAIN"
-            return
-        fi
-        export ROOT_DOMAIN=${2:-thegraid.com}
-        # otherwise: generate a *new* root cert for $ROOT_DOMAIN
-        echo "Doing root cert ($1) for ROOT_DOMAIN=$ROOT_DOMAIN"
+	root=1 ; shift
+	if [ $1 == "-u" ] ; then # just set ENV and reuse the current root cert
+	    # note that root cert will expire in 90 days, so pro'ly need to recreate
+	    shift
+	    export ROOT_ALIAS=${1:-graidroot}
+	    export ROOT_DOMAIN=${2:-thegraid.com}
+	    echo "Using ROOT_ALIAS=$ROOT_ALIAS for ROOT_DOMAIN=$ROOT_DOMAIN"
+	    return
+	fi
+	export ROOT_DOMAIN=${2:-thegraid.com}
+	# otherwise: generate a *new* root cert for $ROOT_DOMAIN
+	echo "Doing root cert ($1) for ROOT_DOMAIN=$ROOT_DOMAIN"
     fi
     local domain=${ROOT_DOMAIN:-thegraid.com}
     # $1 alias
@@ -132,30 +120,30 @@ function makekeys() {
     keytool $usemyks -delete -alias $al ## > /dev/null
     #
     if [ $root == 0 ] ; then  
-        # generate new keypair in $myks
-        keytool $usemyks -genkey -alias $al -keyalg RSA -dname "CN=$cn" -ext SAN=$SAN
-        signstore $al $cn
+	# generate new keypair in $myks
+	keytool $usemyks -genkey -alias $al -keyalg RSA -dname "CN=$cn" -ext SAN=$SAN
+	signstore $al $cn
     else
-        echo "remove prior root cert from Java cert authority"
-        cp -p $(dirname $myks)/$al.cer "$(dirname $myks)/$(date -j)-$al.cer"
-        echo "enter sudo password"
-        sudo keytool -delete $usejcac -noprompt -alias $al
-        echo "remove-trusted-cert from System.keychain"
-        sudo security remove-trusted-cert -d $(dirname $myks)/$al.cer
+	echo "remove prior root cert from Java cert authority"
+	cp -p $(dirname $myks)/$al.cer "$(dirname $myks)/$(date -j)-$al.cer"
+	echo "enter sudo password"
+	sudo keytool -delete $usejcac -noprompt -alias $al
+	echo "remove-trusted-cert from System.keychain"
+	sudo security remove-trusted-cert -d $(dirname $myks)/$al.cer
 
-        # generate new keypair in $myks, as a signing certificate
-        keytool $usemyks -genkey -alias $al -keyalg RSA -dname "CN=$cn" -ext SAN=$SAN -ext BC=5
-        export ROOT_ALIAS=$al
-        # make a .cer file:
-        keytool $usemyks -export -alias $al -file $(dirname $myks)/$al.cer
+	# generate new keypair in $myks, as a signing certificate
+	keytool $usemyks -genkey -alias $al -keyalg RSA -dname "CN=$cn" -ext SAN=$SAN -ext BC=5
+	export ROOT_ALIAS=$al
+	# make a .cer file:
+	keytool $usemyks -export -alias $al -file $(dirname $myks)/$al.cer
 
-        echo "add $a1 to Java cacerts: sudo keytool $usejcac"
-        keytool -exportcert $usemyks -alias $al | sudo keytool -importcert $usejcac -noprompt -alias $al
+	echo "add $a1 to Java cacerts: sudo keytool $usejcac"
+	keytool -exportcert $usemyks -alias $al | sudo keytool -importcert $usejcac -noprompt -alias $al
 
-        echo "add-trusted-cert to System.keychain"
-        sudo security add-trusted-cert -d -r trustRoot -p ssl -p basic -k /Library/Keychains/System.keychain $(dirname $myks)/$al.cer
-        # remove-trusted-cert
-        # https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man1/security.1.html
+	echo "add-trusted-cert to System.keychain"
+	sudo security add-trusted-cert -d -r trustRoot -p ssl -p basic -k /Library/Keychains/System.keychain $(dirname $myks)/$al.cer
+	# remove-trusted-cert
+	# https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man1/security.1.html
     fi 
 }
 
@@ -171,8 +159,8 @@ function signstore() {
     local usemyks=" -keystore $myks -storepass $pw "
    
     keytool $usemyks -alias $al -certreq \
-        | keytool $usemyks -alias $ROOT_ALIAS -gencert -ext SAN=dns:$cn,ip:$ipa \
-        | keytool $usemyks -alias $al -importcert
+	| keytool $usemyks -alias $ROOT_ALIAS -gencert -ext SAN=dns:$cn,ip:$ipa \
+	| keytool $usemyks -alias $al -importcert
 
     makepem $al $cn
 }
@@ -192,7 +180,7 @@ function makepem() {
     rm -f $ks12
     # extract key & cert .pem files to ~/keys/ via ~/.keystore.p12
     keytool -importkeystore -srckeystore $myks -destkeystore $ks12 -deststoretype PKCS12 -srcalias $al \
-            -deststorepass $pw -destkeypass $pw -srckeypass $pw -srcstorepass $pw
+	    -deststorepass $pw -destkeypass $pw -srckeypass $pw -srcstorepass $pw
     openssl pkcs12 -in $ks12 -nokeys         -out ~/keys/$al.cert.pem -passin pass:$pw
     openssl pkcs12 -in $ks12 -nodes -nocerts -out ~/keys/$al.key.pem  -passin pass:$pw
     # add to $NODE_EXTRA_CA_CERTS if that's being used
