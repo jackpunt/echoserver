@@ -7,4 +7,4 @@ class GameServer<T extends pbMessage> extends EchoDriver<T> {
 
 }
 
-wssServer(true, 'gameServer', 'game7', '8446', GameServer)
+wssServer(true, 'gameserver', 'game7', '8446', GameServer)

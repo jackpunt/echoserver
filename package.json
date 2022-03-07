@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "pub": "npm run build; npm version ${1:-patch}; npm publish --access public",
+    "echosrv": "ssh mac-mini ~/bin/npmit echoserver @thegraid/echoserver dist/echoserver.js",
+    "cgsrv": "ssh mac-mini ~/bin/npmit cgserver @thegraid/wspbserver dist/cgserver.js",
     "clean": "rm -f dist/*",
     "tsc": "tsc",
     "build": "npm run clean; npm run tsc",
